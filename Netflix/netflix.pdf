@@ -1,0 +1,94 @@
+### Netflix Dataset EDA
+
+"""
+This notebook explores the Netflix dataset. It cleans the data, performs analysis, and visualizes results using NumPy, Pandas, Matplotlib, and Seaborn.
+"""
+
+### 1. Why This Project?
+# 1. Learn data cleaning with Pandas.
+# 2. Use NumPy for calculations (mean, median, etc.).
+# 3. Visualize trends using Matplotlib and Seaborn.
+# 4. Understand relationships between content features (type, genre, country, rating) and trends.
+
+### 2. Import Libraries
+import seaborn as sns
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+
+sns.set_theme(style="whitegrid")
+
+### 3. Load Dataset
+df = pd.read_csv('netflix_titles.csv')
+df.head()
+
+### 4. Explore Data
+print("Shape:", df.shape)
+print(df.info())
+print(df.isnull().sum())
+print(df.describe())
+
+### 5. Data Cleaning
+# Fill missing values
+df['country'] = df['country'].fillna(df['country'].mode()[0])
+df['cast'] = df['cast'].fillna('No data')
+df['director'] = df['director'].fillna('No data')
+
+# Convert 'date_added' to datetime
+df['date_added'] = pd.to_datetime(df['date_added'], errors='coerce')
+df['year_added'] = df['date_added'].dt.year
+df['month_added'] = df['date_added'].dt.month_name()
+
+# Drop rows with missing rating
+df = df.dropna(subset=['rating'])
+
+### 6. Analysis with NumPy & Pandas
+# Average duration of movies
+avg_duration = df[df['type']=='Movie']['duration'].str.replace(' min','').astype(int).mean()
+print("Average Movie Duration:", avg_duration)
+
+# Count of movies and TV shows
+content_count = df['type'].value_counts()
+print("Content Count:\n", content_count)
+
+# Top 10 genres
+top_genres = df['genre'].value_counts().head(10)
+print("Top Genres:\n", top_genres)
+
+# Top countries by content count
+avg_rating_by_country = df.groupby('country')['rating'].count().sort_values(ascending=False).head(10)
+print("Top Countries by Content Count:\n", avg_rating_by_country)
+
+### 7. Visualization with Matplotlib
+# Bar chart: Content count by type
+content_count.plot(kind='bar', color='skyblue')
+plt.title("Content Count by Type")
+plt.xlabel("Type")
+plt.ylabel("Count")
+plt.show()
+
+# Line plot: Top countries by content count
+avg_rating_by_country.plot(kind='line', marker='o', color='orange')
+plt.title("Top Countries by Content Count")
+plt.xlabel("Country")
+plt.ylabel("Number of Titles")
+plt.show()
+
+### 8. Visualization with Seaborn
+# Countplot by type
+sns.countplot(x='type', data=df, palette='Set2')
+plt.title("Content Type Distribution")
+plt.show()
+
+# Boxplot of movie durations
+sns.boxplot(x='type', y='duration', data=df[df['type']=='Movie'], palette='Set1')
+plt.title("Movie Duration Distribution")
+plt.show()
+
+# Heatmap of correlations (duration & year_added)
+df_numeric = df.copy()
+df_numeric['duration'] = df_numeric['duration'].str.replace(' min','').astype(float)
+corr = df_numeric[['duration','year_added']].corr()
+sns.heatmap(corr, annot=True, cmap='coolwarm')
+plt.title("Correlation Heatmap")
+plt.show()
